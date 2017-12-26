@@ -20,6 +20,7 @@
  *    must comply with the GNU Affero General Public License in all respects for
  *    all of the code used other than as permitted herein. If you modify file(s)
  *    with this exception, you may extend this exception to your version of the
+
  *    file(s), but you are not obligated to do so. If you do not wish to do so,
  *    delete this exception statement from your version. If you delete this
  *    exception statement from all source files in the program, then also delete
@@ -357,7 +358,7 @@ public:
         Database* db = ctx.getDb();
 
         result.append("was", db ? db->getProfilingLevel() : serverGlobalParams.defaultProfile);
-        result.append("slowms", serverGlobalParams.slowMS);
+        result.append("slowms", db ? db->getSlowMS() : serverGlobalParams.slowMS);
         result.append("sampleRate", serverGlobalParams.sampleRate);
 
         if (!readOnly) {
@@ -371,7 +372,7 @@ public:
 
         const BSONElement slow = cmdObj["slowms"];
         if (slow.isNumber()) {
-            serverGlobalParams.slowMS = slow.numberInt();
+            uassertStatusOK(db->setSlowMS(slow.numberInt()));
         }
 
         double newSampleRate;

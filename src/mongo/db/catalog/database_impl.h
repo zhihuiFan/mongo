@@ -141,10 +141,16 @@ public:
      * @param newLevel New profiling level to use.
      */
     Status setProfilingLevel(OperationContext* opCtx, int newLevel) final;
+    Status setSlowMS(int slowms) final;
 
     int getProfilingLevel() const final {
         return _profile;
     }
+
+    int getSlowMS() const final {
+        return _slowms;
+    }
+
     const char* getProfilingNS() const final {
         return _profileName.c_str();
     }
@@ -284,6 +290,7 @@ private:
     const std::string _viewsName;        // "dbname.system.views"
 
     int _profile;  // 0=off.
+    int _slowms;   // db level slowms
 
     // If '_dropPending' is true, this Database is in the midst of a two-phase drop. No new
     // collections may be created in this Database.

@@ -263,6 +263,7 @@ void DatabaseImpl::init(OperationContext* const opCtx) {
     }
 
     _profile = serverGlobalParams.defaultProfile;
+    _slowms = serverGlobalParams.slowMS;
 
     list<string> collections;
     _dbEntry->getCollectionNamespaces(&collections);
@@ -343,6 +344,14 @@ Status DatabaseImpl::setProfilingLevel(OperationContext* opCtx, int newLevel) {
 
     _profile = newLevel;
 
+    return Status::OK();
+}
+
+Status DatabaseImpl::setSlowMS(int slowms) {
+    if (slowms < 0) {
+        return Status(ErrorCodes::BadValue, "slowms has to be >=0");
+    }
+    _slowms = slowms;
     return Status::OK();
 }
 

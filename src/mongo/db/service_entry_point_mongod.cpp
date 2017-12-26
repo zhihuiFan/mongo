@@ -28,9 +28,10 @@
 
 #define MONGO_LOG_DEFAULT_COMPONENT ::mongo::logger::LogComponent::kCommand
 
-#include "mongo/platform/basic.h"
-
 #include "mongo/db/service_entry_point_mongod.h"
+#include "mongo/db/catalog/database_holder.h"
+#include "mongo/db/db_raii.h"
+#include "mongo/platform/basic.h"
 
 #include "mongo/base/checked_cast.h"
 #include "mongo/db/audit.h"
@@ -1132,8 +1133,8 @@ DbResponse ServiceEntryPointMongod::handleRequest(OperationContext* opCtx, const
     }
 
     OpDebug& debug = currentOp.debug();
+    long long logThresholdMs;
 
-    long long logThresholdMs = serverGlobalParams.slowMS;
     bool shouldLogOpDebug = shouldLog(logger::LogSeverity::Debug(1));
 
     DbResponse dbresponse;
@@ -1198,6 +1199,14 @@ DbResponse ServiceEntryPointMongod::handleRequest(OperationContext* opCtx, const
     const bool shouldSample = serverGlobalParams.sampleRate == 1.0
         ? true
         : c.getPrng().nextCanonicalDouble() < serverGlobalParams.sampleRate;
+
+    if (op != dbKillCursors) {
+        auto ns = currentOp.getNS();
+        StringData dbname = StringData(ns.substr(0, ns.find(".")).c_str());
+        AutoGetDb ctx(opCtx, dbname, MODE_S);
+        Database* db = ctx.getDb();
+        logThresholdMs = db ? db->getSlowMS() : serverGlobalParams.slowMS;
+    }
 
     if (shouldLogOpDebug || (shouldSample && debug.executionTimeMicros > logThresholdMs * 1000LL)) {
         Locker::LockerInfo lockerInfo;

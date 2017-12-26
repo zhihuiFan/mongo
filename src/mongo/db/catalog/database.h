@@ -71,6 +71,10 @@ public:
 
         virtual int getProfilingLevel() const = 0;
 
+        virtual Status setSlowMS(const int slowms) = 0;
+
+        virtual int getSlowMS() const = 0;
+
         virtual const char* getProfilingNS() const = 0;
 
         virtual void setDropPending(OperationContext* opCtx, bool dropPending) = 0;
@@ -223,8 +227,16 @@ public:
         return this->_impl().setProfilingLevel(opCtx, newLevel);
     }
 
+    inline Status setSlowMS(const int slowms) {
+        return this->_impl().setSlowMS(slowms);
+    }
+
     inline int getProfilingLevel() const {
         return this->_impl().getProfilingLevel();
+    }
+
+    inline int getSlowMS() const {
+        return this->_impl().getSlowMS();
     }
 
     inline const char* getProfilingNS() const {

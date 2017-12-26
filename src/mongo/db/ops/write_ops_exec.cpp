@@ -106,7 +106,16 @@ void finishCurOp(OperationContext* opCtx, CurOp* curOp) {
 
         const bool logAll = logger::globalLogDomain()->shouldLog(logger::LogComponent::kCommand,
                                                                  logger::LogSeverity::Debug(1));
-        const bool logSlow = executionTimeMicros > (serverGlobalParams.slowMS * 1000LL);
+
+        int slowms;
+        {
+            auto ns = curOp->getNS();
+            StringData dbname = StringData(ns.substr(0, ns.find(".")).c_str());
+            AutoGetDb ctx(opCtx, dbname, MODE_S);
+            Database* db = ctx.getDb();
+            slowms = db ? db->getSlowMS() : serverGlobalParams.slowMS;
+        }
+        const bool logSlow = executionTimeMicros > (slowms * 1000LL);
 
         const bool shouldSample = serverGlobalParams.sampleRate == 1.0
             ? true
