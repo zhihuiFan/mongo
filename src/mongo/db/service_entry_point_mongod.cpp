@@ -1200,15 +1200,7 @@ DbResponse ServiceEntryPointMongod::handleRequest(OperationContext* opCtx, const
         ? true
         : c.getPrng().nextCanonicalDouble() < serverGlobalParams.sampleRate;
 
-    if (op != dbKillCursors) {
-        auto ns = currentOp.getNS();
-        StringData dbname = StringData(ns.substr(0, ns.find(".")).c_str());
-        AutoGetDb ctx(opCtx, dbname, MODE_S);
-        Database* db = ctx.getDb();
-        logThresholdMs = db ? db->getSlowMS() : serverGlobalParams.slowMS;
-    }
-
-    if (shouldLogOpDebug || (shouldSample && debug.executionTimeMicros > logThresholdMs * 1000LL)) {
+    if (shouldLogOpDebug || (shouldSample && currentOp.shouldLogSlow())) {
         Locker::LockerInfo lockerInfo;
         opCtx->lockState()->getLockerInfo(&lockerInfo);
         log() << debug.report(&c, currentOp, lockerInfo.stats);

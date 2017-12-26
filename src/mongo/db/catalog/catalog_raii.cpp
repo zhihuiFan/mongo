@@ -29,6 +29,7 @@
 #include "mongo/platform/basic.h"
 
 #include "mongo/db/catalog/catalog_raii.h"
+#include "mongo/db/curop.h"
 
 #include "mongo/db/catalog/database_holder.h"
 #include "mongo/db/catalog/uuid_catalog.h"
@@ -42,10 +43,20 @@ MONGO_FP_DECLARE(setAutoGetCollectionWait);
 }  // namespace
 
 AutoGetDb::AutoGetDb(OperationContext* opCtx, StringData ns, LockMode mode)
-    : _dbLock(opCtx, ns, mode), _db(dbHolder().get(opCtx, ns)) {}
+    : _dbLock(opCtx, ns, mode), _db(dbHolder().get(opCtx, ns)) {
+    if (_db) {
+        auto& curOp = *CurOp::get(opCtx);
+        curOp.setSlowMS(_db->getSlowMS());
+    }
+}
 
 AutoGetDb::AutoGetDb(OperationContext* opCtx, StringData ns, Lock::DBLock lock)
-    : _dbLock(std::move(lock)), _db(dbHolder().get(opCtx, ns)) {}
+    : _dbLock(std::move(lock)), _db(dbHolder().get(opCtx, ns)) {
+    if (_db) {
+        auto& curOp = *CurOp::get(opCtx);
+        curOp.setSlowMS(_db->getSlowMS());
+    }
+}
 
 AutoGetCollection::AutoGetCollection(OperationContext* opCtx,
                                      const NamespaceString& nss,

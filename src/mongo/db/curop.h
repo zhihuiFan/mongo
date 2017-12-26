@@ -376,6 +376,13 @@ public:
         _command = command;
     }
 
+    void setSlowMS(int slowms) {
+        _slowms = slowms;
+    }
+
+    bool shouldLogSlow() {
+        return durationCount<Microseconds>(elapsedTimeExcludingPauses()) > _slowms * 1000LL;
+    }
     /**
      * Returns whether the current operation is a read, write, or command.
      */
@@ -479,6 +486,7 @@ private:
 
     bool _isCommand{false};
     int _dbprofile{0};  // 0=off, 1=slow, 2=all
+    int _slowms{serverGlobalParams.slowMS};
     std::string _ns;
     BSONObj _opDescription;
     BSONObj _originatingCommand;  // Used by getMore to display original command.
