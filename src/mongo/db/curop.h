@@ -237,7 +237,7 @@ public:
         if (!shouldSample || _dbprofile <= 0)
             return false;
 
-        return elapsedTimeExcludingPauses() >= Milliseconds{serverGlobalParams.slowMS};
+        return shouldLogSlow();
     }
 
     /**
@@ -381,7 +381,7 @@ public:
     }
 
     bool shouldLogSlow() {
-        return durationCount<Microseconds>(elapsedTimeExcludingPauses()) > _slowms * 1000LL;
+        return durationCount<Microseconds>(elapsedTimeExcludingPauses()) >= _slowms * 1000LL;
     }
     /**
      * Returns whether the current operation is a read, write, or command.
