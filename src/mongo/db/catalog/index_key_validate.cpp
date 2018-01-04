@@ -75,6 +75,7 @@ static const std::set<StringData> allowedFieldNames = {
     IndexDescriptor::kDefaultLanguageFieldName,
     IndexDescriptor::kDropDuplicatesFieldName,
     IndexDescriptor::kExpireAfterSecondsFieldName,
+    IndexDescriptor::kInvisibleFieldName,
     IndexDescriptor::kGeoHaystackBucketSize,
     IndexDescriptor::kIndexNameFieldName,
     IndexDescriptor::kIndexVersionFieldName,

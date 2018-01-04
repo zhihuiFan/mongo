@@ -38,6 +38,7 @@
 #include "mongo/db/storage/kv/kv_catalog_feature_tracker.h"
 #include "mongo/db/storage/kv/kv_engine.h"
 
+
 namespace mongo {
 
 using std::string;
@@ -217,6 +218,11 @@ void KVCollectionCatalogEntry::indexBuildSuccess(OperationContext* opCtx, String
     MetaData md = _getMetaData(opCtx);
     int offset = md.findIndexOffset(indexName);
     invariant(offset >= 0);
+    if (!md.indexes[offset].spec.hasField(IndexDescriptor::kInvisibleFieldName)) {
+      BSONObjBuilder builder;
+      builder.append(IndexDescriptor::kInvisibleFieldName, true);
+      md.indexes[offset].spec = md.indexes[offset].spec.addField(builder.done().firstElement());
+    }
     md.indexes[offset].ready = true;
     _catalog->putMetaData(opCtx, ns().toString(), md);
 }
