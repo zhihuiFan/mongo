@@ -79,6 +79,7 @@ public:
             : spec(s), ready(r), head(h), multikey(m), prefix(prefix) {}
 
         void updateTTLSetting(long long newExpireSeconds);
+        void updateInvisible(bool invisible);
 
         std::string name() const {
             return spec["name"].String();

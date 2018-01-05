@@ -210,6 +210,19 @@ void BSONCollectionCatalogEntry::IndexMetaData::updateTTLSetting(long long newEx
     spec = b.obj();
 }
 
+  void BSONCollectionCatalogEntry::IndexMetaData::updateInvisible(bool invisible) {
+    BSONObjBuilder b;
+    for (BSONObjIterator bi(spec); bi.more();) {
+        BSONElement e = bi.next();
+        if (e.fieldNameStringData() == "invisible") {
+            continue;
+        }
+        b.append(e);
+    }
+    b.append("invisible", invisible);
+    spec = b.obj();
+  }
+  
 // --------------------------
 
 int BSONCollectionCatalogEntry::MetaData::findIndexOffset(StringData name) const {

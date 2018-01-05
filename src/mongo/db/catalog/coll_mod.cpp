@@ -68,6 +68,7 @@ MONGO_FP_DECLARE(hangBeforeDatabaseUpgrade);
 struct CollModRequest {
     const IndexDescriptor* idx = nullptr;
     BSONElement indexExpireAfterSeconds = {};
+  BSONElement indexInvisible = {};
     BSONElement viewPipeLine = {};
     std::string viewOn = {};
     BSONElement collValidator = {};
@@ -103,9 +104,7 @@ StatusWith<CollModRequest> parseCollModRequest(OperationContext* opCtx,
             if (nameElem && keyPatternElem) {
                 return Status(ErrorCodes::InvalidOptions,
                               "Cannot specify both key pattern and name.");
-            }
-
-            if (!nameElem && !keyPatternElem) {
+            } else if (!nameElem && !keyPatternElem) {
                 return Status(ErrorCodes::InvalidOptions,
                               "Must specify either index name or key pattern.");
             }
@@ -115,9 +114,7 @@ StatusWith<CollModRequest> parseCollModRequest(OperationContext* opCtx,
                     return Status(ErrorCodes::InvalidOptions, "Index name must be a string.");
                 }
                 indexName = nameElem.valueStringData();
-            }
-
-            if (keyPatternElem) {
+            }  else if  (keyPatternElem) {
                 if (keyPatternElem.type() != BSONType::Object) {
                     return Status(ErrorCodes::InvalidOptions, "Key pattern must be an object.");
                 }
@@ -125,13 +122,21 @@ StatusWith<CollModRequest> parseCollModRequest(OperationContext* opCtx,
             }
 
             cmr.indexExpireAfterSeconds = indexObj["expireAfterSeconds"];
-            if (cmr.indexExpireAfterSeconds.eoo()) {
-                return Status(ErrorCodes::InvalidOptions, "no expireAfterSeconds field");
-            }
-            if (!cmr.indexExpireAfterSeconds.isNumber()) {
+	    cmr.indexInvisible = indexObj["invisible"];
+            if (!cmr.indexExpireAfterSeconds.eoo() && !cmr.indexExpireAfterSeconds.isNumber()) {
                 return Status(ErrorCodes::InvalidOptions,
                               "expireAfterSeconds field must be a number");
             }
+
+	    if (!cmr.indexInvisible.eoo() && !cmr.indexInvisible.isBoolean()) {
+	        return Status(ErrorCodes::InvalidOptions,
+                              "invisible field must be a boolean");
+	    }
+
+	    if (cmr.indexInvisible.eoo() && cmr.indexExpireAfterSeconds.eoo()) {
+	          return Status(ErrorCodes::InvalidOptions,
+                              "either expireAfterSeconds or invisible field must be provided");
+	    }
 
             if (!indexName.empty()) {
                 cmr.idx = coll->getIndexCatalog()->findIndexByName(opCtx, indexName);
@@ -164,6 +169,7 @@ StatusWith<CollModRequest> parseCollModRequest(OperationContext* opCtx,
                 cmr.idx = indexes[0];
             }
 
+	    if (!cmr.indexExpireAfterSeconds.eoo()) {
             BSONElement oldExpireSecs = cmr.idx->infoObj().getField("expireAfterSeconds");
             if (oldExpireSecs.eoo()) {
                 return Status(ErrorCodes::InvalidOptions, "no expireAfterSeconds field to update");
@@ -171,7 +177,7 @@ StatusWith<CollModRequest> parseCollModRequest(OperationContext* opCtx,
             if (!oldExpireSecs.isNumber()) {
                 return Status(ErrorCodes::InvalidOptions,
                               "existing expireAfterSeconds field is not a number");
-            }
+            }}
 
         } else if (fieldName == "validator" && !isView) {
             MatchExpressionParser::AllowedFeatureSet allowedFeatures =
@@ -384,6 +390,23 @@ Status _collModInternal(OperationContext* opCtx,
         ttlInfo = TTLCollModInfo{Seconds(newExpireSecs.safeNumberLong()),
                                  Seconds(oldExpireSecs.safeNumberLong()),
                                  cmr.idx->indexName()};
+    }
+
+    // Invisible Index
+
+    if (!cmr.indexInvisible.eoo()) {
+      bool newInvisible = cmr.indexInvisible.Bool();
+      bool oldInvisible = true;
+      BSONElement oldInvisibleElem = cmr.idx->infoObj().getField("invisible");
+      if (!oldInvisibleElem.eoo()) {
+	oldInvisible = oldInvisibleElem.Bool();
+      }
+      if (newInvisible != oldInvisible) {
+	result->append("invisible_old", oldInvisible);
+	coll->getCatalogEntry()->updateInvisibleSetting(opCtx, cmr.idx->indexName(), newInvisible);
+	cmr.idx = coll->getIndexCatalog()->refreshEntry(opCtx, cmr.idx);
+	result->append("invisible_new", newInvisible);
+      }
     }
 
     // Validator

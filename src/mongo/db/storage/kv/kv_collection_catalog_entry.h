@@ -72,6 +72,10 @@ public:
                           StringData idxName,
                           long long newExpireSeconds) final;
 
+    void updateInvisibleSetting(OperationContext *opCtx,
+				StringData   idxName,
+				bool newInvisible) final;
+
     void updateFlags(OperationContext* opCtx, int newValue) final;
 
     void updateValidator(OperationContext* opCtx,

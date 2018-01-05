@@ -97,6 +97,9 @@ public:
     void updateTTLSetting(OperationContext* opCtx,
                           StringData idxName,
                           long long newExpireSeconds) final;
+  void updateInvisibleSetting(OperationContext* opCtx,
+			      StringData idxName,
+			      bool invisible) final;
 
     void updateFlags(OperationContext* opCtx, int newValue) final;
 

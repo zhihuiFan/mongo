@@ -237,6 +237,14 @@ void KVCollectionCatalogEntry::updateTTLSetting(OperationContext* opCtx,
     _catalog->putMetaData(opCtx, ns().toString(), md);
 }
 
+  void KVCollectionCatalogEntry::updateInvisibleSetting(mongo::OperationContext *opCtx, mongo::StringData idxName, bool newInvisible) {
+    MetaData md = _getMetaData(opCtx);
+    int offset = md.findIndexOffset(idxName);
+    invariant(offset >= 0);
+    md.indexes[offset].updateInvisible(newInvisible);
+    _catalog->putMetaData(opCtx, ns().toString(), md);
+  }
+
 void KVCollectionCatalogEntry::addUUID(OperationContext* opCtx,
                                        CollectionUUID uuid,
                                        Collection* coll) {
