@@ -396,7 +396,7 @@ Status _collModInternal(OperationContext* opCtx,
 
     if (!cmr.indexInvisible.eoo()) {
       bool newInvisible = cmr.indexInvisible.Bool();
-      bool oldInvisible = true;
+      bool oldInvisible = false;
       BSONElement oldInvisibleElem = cmr.idx->infoObj().getField("invisible");
       if (!oldInvisibleElem.eoo()) {
 	oldInvisible = oldInvisibleElem.Bool();

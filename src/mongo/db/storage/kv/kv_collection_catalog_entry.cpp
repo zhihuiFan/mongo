@@ -220,7 +220,7 @@ void KVCollectionCatalogEntry::indexBuildSuccess(OperationContext* opCtx, String
     invariant(offset >= 0);
     if (!md.indexes[offset].spec.hasField(IndexDescriptor::kInvisibleFieldName)) {
       BSONObjBuilder builder;
-      builder.append(IndexDescriptor::kInvisibleFieldName, true);
+      builder.append(IndexDescriptor::kInvisibleFieldName, false);
       md.indexes[offset].spec = md.indexes[offset].spec.addField(builder.done().firstElement());
     }
     md.indexes[offset].ready = true;

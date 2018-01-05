@@ -53,6 +53,7 @@ struct IndexEntry {
                const MultikeyPaths& mkp,
                bool sp,
                bool unq,
+	       bool invisi,
                const std::string& n,
                const MatchExpression* fe,
                const BSONObj& io,
@@ -62,6 +63,7 @@ struct IndexEntry {
           multikeyPaths(mkp),
           sparse(sp),
           unique(unq),
+	  invisible(invisi),
           name(n),
           filterExpr(fe),
           infoObj(io),
@@ -123,6 +125,8 @@ struct IndexEntry {
     bool sparse;
 
     bool unique;
+
+    bool invisible;
 
     std::string name;
 
