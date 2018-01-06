@@ -98,9 +98,9 @@ StatusWith<std::vector<BSONObj>> parseAndValidateIndexSpecs(
                                           << "' array must be objects, but got "
                                           << typeName(indexesElem.type())};
                 }
-		BSONObj options = indexesElem.Obj();
-                auto indexSpecStatus = index_key_validate::validateIndexSpec(
-                    opCtx, options, ns, featureCompatibility);
+                BSONObj options = indexesElem.Obj();
+                auto indexSpecStatus =
+                    index_key_validate::validateIndexSpec(opCtx, options, ns, featureCompatibility);
                 if (!indexSpecStatus.isOK()) {
                     return indexSpecStatus.getStatus();
                 }

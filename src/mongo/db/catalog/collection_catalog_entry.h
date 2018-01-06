@@ -121,9 +121,9 @@ public:
                                   StringData idxName,
                                   long long newExpireSeconds) = 0;
 
-  virtual void updateInvisibleSetting(OperationContext* opCtx,
-                                  StringData idxName,
-				      bool newInvisible) =  0;
+    virtual void updateInvisibleSetting(OperationContext* opCtx,
+                                        StringData idxName,
+                                        bool newInvisible) = 0;
 
     /**
      * Sets the flags field of CollectionOptions to newValue.

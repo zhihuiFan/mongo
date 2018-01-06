@@ -177,9 +177,9 @@ void QueryPlannerIXSelect::findRelevantIndices(const unordered_set<string>& fiel
                                                const vector<IndexEntry>& allIndices,
                                                vector<IndexEntry>* out) {
     for (size_t i = 0; i < allIndices.size(); ++i) {
-      if (allIndices[i].invisible)  {
-	continue;
-      }
+        if (allIndices[i].invisible) {
+            continue;
+        }
         BSONObjIterator it(allIndices[i].keyPattern);
         verify(it.more());
         BSONElement elt = it.next();

@@ -219,9 +219,9 @@ void KVCollectionCatalogEntry::indexBuildSuccess(OperationContext* opCtx, String
     int offset = md.findIndexOffset(indexName);
     invariant(offset >= 0);
     if (!md.indexes[offset].spec.hasField(IndexDescriptor::kInvisibleFieldName)) {
-      BSONObjBuilder builder;
-      builder.append(IndexDescriptor::kInvisibleFieldName, false);
-      md.indexes[offset].spec = md.indexes[offset].spec.addField(builder.done().firstElement());
+        BSONObjBuilder builder;
+        builder.append(IndexDescriptor::kInvisibleFieldName, false);
+        md.indexes[offset].spec = md.indexes[offset].spec.addField(builder.done().firstElement());
     }
     md.indexes[offset].ready = true;
     _catalog->putMetaData(opCtx, ns().toString(), md);
@@ -237,13 +237,15 @@ void KVCollectionCatalogEntry::updateTTLSetting(OperationContext* opCtx,
     _catalog->putMetaData(opCtx, ns().toString(), md);
 }
 
-  void KVCollectionCatalogEntry::updateInvisibleSetting(mongo::OperationContext *opCtx, mongo::StringData idxName, bool newInvisible) {
+void KVCollectionCatalogEntry::updateInvisibleSetting(mongo::OperationContext* opCtx,
+                                                      mongo::StringData idxName,
+                                                      bool newInvisible) {
     MetaData md = _getMetaData(opCtx);
     int offset = md.findIndexOffset(idxName);
     invariant(offset >= 0);
     md.indexes[offset].updateInvisible(newInvisible);
     _catalog->putMetaData(opCtx, ns().toString(), md);
-  }
+}
 
 void KVCollectionCatalogEntry::addUUID(OperationContext* opCtx,
                                        CollectionUUID uuid,

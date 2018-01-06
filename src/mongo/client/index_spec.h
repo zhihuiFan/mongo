@@ -127,7 +127,7 @@ public:
     IndexSpec& expireAfterSeconds(int value);
 
 
-  IndexSpec& invisible(bool value = false);
+    IndexSpec& invisible(bool value = false);
 
     /** Explicitly request an index of the given version. As of MongoDB 2.6, the only accepted
      *  values are 0 or 1. Versions 2.0 and later default to '1'. Do not set this option except

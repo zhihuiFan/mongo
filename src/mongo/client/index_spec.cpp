@@ -133,10 +133,10 @@ IndexSpec& IndexSpec::expireAfterSeconds(int value) {
     return *this;
 }
 
-  IndexSpec& IndexSpec::invisible(bool value) {
+IndexSpec& IndexSpec::invisible(bool value) {
     _options.append("invisible", value);
     return *this;
-  }
+}
 IndexSpec& IndexSpec::version(int value) {
     uassert(ErrorCodes::InvalidOptions, kDuplicateOption, !_options.asTempObj().hasField("v"));
     _options.append("v", value);

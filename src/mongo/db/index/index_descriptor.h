@@ -99,7 +99,7 @@ public:
           _sparse(infoObj[IndexDescriptor::kSparseFieldName].trueValue()),
           _unique(_isIdIndex || infoObj[kUniqueFieldName].trueValue()),
           _partial(!infoObj[kPartialFilterExprFieldName].eoo()),
-	  _invisible(infoObj.getBoolField(IndexDescriptor::kInvisibleFieldName)),
+          _invisible(infoObj.getBoolField(IndexDescriptor::kInvisibleFieldName)),
           _cachedEntry(NULL) {
         _indexNamespace = makeIndexNamespace(_parentNS, _indexName);
 
@@ -219,9 +219,9 @@ public:
         return _isIdIndex;
     }
 
-  bool isInvisible() const {
-    return _invisible;
-  }
+    bool isInvisible() const {
+        return _invisible;
+    }
 
     //
     // Properties that are Index-specific.
@@ -291,7 +291,7 @@ private:
     bool _sparse;
     bool _unique;
     bool _partial;
-  bool _invisible;
+    bool _invisible;
     IndexVersion _version;
 
     // only used by IndexCatalogEntryContainer to do caching for perf

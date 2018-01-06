@@ -393,9 +393,9 @@ void NamespaceDetailsCollectionCatalogEntry::updateTTLSetting(OperationContext* 
     }
 }
 
-  void NamespaceDetailsCollectionCatalogEntry::updateInvisibleSetting(OperationContext* opCtx,
-								      StringData idxName,
-								      bool invisible) {
+void NamespaceDetailsCollectionCatalogEntry::updateInvisibleSetting(OperationContext* opCtx,
+                                                                    StringData idxName,
+                                                                    bool invisible) {
     int idx = _findIndexNumber(opCtx, idxName);
     invariant(idx >= 0);
 
@@ -404,20 +404,23 @@ void NamespaceDetailsCollectionCatalogEntry::updateTTLSetting(OperationContext* 
     BSONObj obj = _indexRecordStore->dataFor(opCtx, indexDetails.info.toRecordId()).toBson();
     const BSONElement oldInvisible = obj.getField("invisible");
 
-    char* nonConstPtr = const_cast<char *>(oldInvisible.value());
+    char* nonConstPtr = const_cast<char*>(oldInvisible.value());
 
     switch (oldInvisible.type()) {
-    case EOO:
-      massert(16633, "this index was created before invisible feature online, recreate index is needed for this feature", false);
-      break;
-  case Bool:
-    *opCtx->recoveryUnit()->writing(reinterpret_cast<bool *>(nonConstPtr)) = invisible;
-    break;
-    default:
-      massert(16635, "Index has a setting about invisible, but it is not a bool", false);
-      break;
-      }
-  }
+        case EOO:
+            massert(16633,
+                    "this index was created before invisible feature online, recreate index is "
+                    "needed for this feature",
+                    false);
+            break;
+        case Bool:
+            *opCtx->recoveryUnit()->writing(reinterpret_cast<bool*>(nonConstPtr)) = invisible;
+            break;
+        default:
+            massert(16635, "Index has a setting about invisible, but it is not a bool", false);
+            break;
+    }
+}
 
 
 void NamespaceDetailsCollectionCatalogEntry::_updateSystemNamespaces(OperationContext* opCtx,
