@@ -854,6 +854,7 @@ BSONObj IndexCatalogImpl::getDefaultIdIndexSpec(
     b.append("name", "_id_");
     b.append("ns", _collection->ns().ns());
     b.append("key", _idObj);
+    b.append("invisible", false);
     if (_collection->getDefaultCollator() && indexVersion >= IndexVersion::kV2) {
         // Creating an index with the "collation" option requires a v=2 index.
         b.append("collation", _collection->getDefaultCollator()->getSpec().toBSON());
