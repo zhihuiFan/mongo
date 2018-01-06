@@ -97,6 +97,7 @@ static const std::set<StringData> allowedIdIndexFieldNames = {
     IndexDescriptor::kIndexVersionFieldName,
     IndexDescriptor::kKeyPatternFieldName,
     IndexDescriptor::kNamespaceFieldName,
+    IndexDescriptor::kInvisibleFieldName,
     // Index creation under legacy writeMode can result in an index spec with an _id field.
     "_id"};
 }
