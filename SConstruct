@@ -906,7 +906,7 @@ def fatal_error(env, msg, *args):
 
 def conf_error(env, msg, *args):
     print msg.format(*args)
-    print "See {0} for details".format(env['CONFIGURELOG'].abspath)
+    print "See {0} for details".format(env['CONFIGURELOG'])
 
     Exit(1)
 

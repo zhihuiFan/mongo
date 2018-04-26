@@ -397,6 +397,7 @@ void DatabaseCloner::_collectionClonerCallback(const Status& status, const Names
                                    << "' there was an error '"
                                    << status.reason()
                                    << "'"};
+        warning() << newStatus.reason();
         _failedNamespaces.push_back({newStatus, nss});
     }
     ++_stats.clonedCollections;
