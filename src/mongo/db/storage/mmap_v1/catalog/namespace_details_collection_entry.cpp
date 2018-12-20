@@ -393,6 +393,33 @@ void NamespaceDetailsCollectionCatalogEntry::updateTTLSetting(OperationContext* 
     }
 }
 
+void NamespaceDetailsCollectionCatalogEntry::updateInvisible(OperationContext* opCtx,
+                                                             StringData idxName,
+                                                             bool invisible) {
+    int idx = _findIndexNumber(opCtx, idxName);
+    invariant(idx >= 0);
+
+    IndexDetails& indexDetails = _details->idx(idx);
+
+    BSONObj obj = _indexRecordStore->dataFor(opCtx, indexDetails.info.toRecordId()).toBson();
+    const BSONElement oldInvisible = obj.getField("invisible");
+
+    // Important that we set the new value in-place.  We are writing directly to the
+    // object here so must be careful not to overwrite with a longer numeric type.
+
+    char* nonConstPtr = const_cast<char*>(oldInvisible.value());
+    switch (oldInvisible.type()) {
+        case EOO:
+            massert(50855, "index does not have an 'invisible' field", false);
+            break;
+        case Bool:
+            *opCtx->recoveryUnit()->writing(reinterpret_cast<int*>(nonConstPtr)) = invisible;
+            break;
+        default:
+            massert(50854, "current 'invisible' is not a bool", false);
+    }
+}
+
 void NamespaceDetailsCollectionCatalogEntry::_updateSystemNamespaces(OperationContext* opCtx,
                                                                      const BSONObj& update) {
     if (!_namespacesRecordStore)

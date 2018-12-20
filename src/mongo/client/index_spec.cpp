@@ -106,6 +106,12 @@ IndexSpec& IndexSpec::unique(bool value) {
     return *this;
 }
 
+IndexSpec& IndexSpec::invisible(bool value) {
+    uassert(ErrorCodes::InvalidOptions, kDuplicateOption, !_options.asTempObj().hasField("invisible"));
+    _options.append("invisible", value);
+    return *this;
+}
+
 IndexSpec& IndexSpec::name(const StringData& value) {
     _name = value.toString();
     _dynamicName = false;

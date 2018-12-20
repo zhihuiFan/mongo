@@ -63,7 +63,8 @@ void populateOptionsMap(std::map<StringData, BSONElement>& theMap, const BSONObj
                 IndexDescriptor::kBackgroundFieldName ||  // this is a creation time option only
             fieldName == IndexDescriptor::kDropDuplicatesFieldName ||  // this is now ignored
             fieldName == IndexDescriptor::kSparseFieldName ||          // checked specially
-            fieldName == IndexDescriptor::kUniqueFieldName             // check specially
+            fieldName == IndexDescriptor::kUniqueFieldName ||          // check specially
+            fieldName == IndexDescriptor::kInvisibleFieldName   // invisible flag should not be checked, or else ensureIndex will fail
             ) {
             continue;
         }
@@ -95,6 +96,7 @@ constexpr StringData IndexDescriptor::kStorageEngineFieldName;
 constexpr StringData IndexDescriptor::kTextVersionFieldName;
 constexpr StringData IndexDescriptor::kUniqueFieldName;
 constexpr StringData IndexDescriptor::kWeightsFieldName;
+constexpr StringData IndexDescriptor::kInvisibleFieldName;
 
 bool IndexDescriptor::isIndexVersionSupported(IndexVersion indexVersion) {
     switch (indexVersion) {

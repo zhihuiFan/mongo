@@ -233,6 +233,16 @@ void KVCollectionCatalogEntry::updateTTLSetting(OperationContext* opCtx,
     _catalog->putMetaData(opCtx, ns().toString(), md);
 }
 
+void KVCollectionCatalogEntry::updateInvisible(OperationContext* opCtx,
+                                               StringData idxName,
+                                               bool invisible) {
+    MetaData md = _getMetaData(opCtx);
+    int offset = md.findIndexOffset(idxName);
+    invariant(offset >= 0);
+    md.indexes[offset].updateInvisible(invisible);
+    _catalog->putMetaData(opCtx, ns().toString(), md);
+}
+
 void KVCollectionCatalogEntry::updateIndexMetadata(OperationContext* opCtx,
                                                    const IndexDescriptor* desc) {
     // Update any metadata Ident has for this index

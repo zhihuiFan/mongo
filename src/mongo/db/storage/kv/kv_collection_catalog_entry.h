@@ -74,6 +74,10 @@ public:
                           StringData idxName,
                           long long newExpireSeconds) final;
 
+    void updateInvisible(OperationContext* opCtx,
+                         StringData idxName,
+                         bool invisible) final;
+
     void updateFlags(OperationContext* opCtx, int newValue) final;
 
     void updateIndexMetadata(OperationContext* opCtx, const IndexDescriptor* desc) final;

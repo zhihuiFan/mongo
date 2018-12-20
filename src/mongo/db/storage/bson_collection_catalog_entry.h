@@ -89,6 +89,8 @@ public:
 
         void updateTTLSetting(long long newExpireSeconds);
 
+        void updateInvisible(bool invisible);
+
         std::string name() const {
             return spec["name"].String();
         }

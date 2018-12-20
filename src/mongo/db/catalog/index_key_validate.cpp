@@ -84,6 +84,7 @@ static const std::set<StringData> allowedFieldNames = {
     IndexDescriptor::kPartialFilterExprFieldName,
     IndexDescriptor::kSparseFieldName,
     IndexDescriptor::kStorageEngineFieldName,
+    IndexDescriptor::kInvisibleFieldName,
     IndexDescriptor::kTextVersionFieldName,
     IndexDescriptor::kUniqueFieldName,
     IndexDescriptor::kWeightsFieldName,
@@ -96,6 +97,7 @@ static const std::set<StringData> allowedIdIndexFieldNames = {
     IndexDescriptor::kIndexVersionFieldName,
     IndexDescriptor::kKeyPatternFieldName,
     IndexDescriptor::kNamespaceFieldName,
+    IndexDescriptor::kInvisibleFieldName,
     // Index creation under legacy writeMode can result in an index spec with an _id field.
     "_id"};
 }
@@ -267,6 +269,11 @@ StatusWith<BSONObj> validateIndexSpec(
             }
 
             hasIndexNameField = true;
+        } else if (IndexDescriptor::kInvisibleFieldName == indexSpecElemFieldName) {
+            if (serverGlobalParams.featureCompatibility.getVersionUnsafe() < ServerGlobalParams::FeatureCompatibility::Version::kFullyUpgradedTo40) {
+                return {ErrorCodes::BadValue,
+                        str::stream() << "only featureCompatibility >= 4.0 can set invisible flag"};
+            }
         } else if (IndexDescriptor::kNamespaceFieldName == indexSpecElemFieldName) {
             if (indexSpecElem.type() != BSONType::String) {
                 return {ErrorCodes::TypeMismatch,

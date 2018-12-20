@@ -199,6 +199,11 @@ StatusWith<std::vector<BSONObj>> resolveCollectionDefaultProperties(
             }
         }
 
+        if (!indexSpec.hasField("invisible") &&
+            serverGlobalParams.featureCompatibility.getVersionUnsafe() >= ServerGlobalParams::FeatureCompatibility::Version::kFullyUpgradedTo40) {
+            BSONObj i = BSON("invisible" << false);
+            indexSpec = indexSpec.addField(i.firstElement());
+        }
         indexSpecsWithDefaults[i] = indexSpec;
     }
 

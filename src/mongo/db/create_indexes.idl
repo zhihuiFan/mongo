@@ -43,6 +43,9 @@ structs:
       sparse:
         type: bool
         optional: true
+      invisible:
+        type: bool
+        optional: true
       expireAfterSeconds:
         type: int
         optional: true

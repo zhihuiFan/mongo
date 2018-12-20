@@ -69,6 +69,7 @@ MONGO_FAIL_POINT_DEFINE(hangBeforeDatabaseUpgrade);
 struct CollModRequest {
     const IndexDescriptor* idx = nullptr;
     BSONElement indexExpireAfterSeconds = {};
+    BSONElement indexInvisible = {};
     BSONElement viewPipeLine = {};
     std::string viewOn = {};
     BSONElement collValidator = {};
@@ -126,12 +127,16 @@ StatusWith<CollModRequest> parseCollModRequest(OperationContext* opCtx,
             }
 
             cmr.indexExpireAfterSeconds = indexObj["expireAfterSeconds"];
-            if (cmr.indexExpireAfterSeconds.eoo()) {
-                return Status(ErrorCodes::InvalidOptions, "no expireAfterSeconds field");
+            cmr.indexInvisible = indexObj["invisible"];
+            if (cmr.indexExpireAfterSeconds.eoo() && cmr.indexInvisible.eoo()) {
+                return Status(ErrorCodes::InvalidOptions, "no expireAfterSeconds or invisible field");
             }
-            if (!cmr.indexExpireAfterSeconds.isNumber()) {
+            if (!cmr.indexExpireAfterSeconds.eoo() && !cmr.indexExpireAfterSeconds.isNumber()) {
                 return Status(ErrorCodes::InvalidOptions,
                               "expireAfterSeconds field must be a number");
+            }
+            if (!cmr.indexInvisible.eoo() && !cmr.indexInvisible.isBoolean()) {
+                return Status(ErrorCodes::InvalidOptions, "invisible field must be a bool");
             }
 
             if (!indexName.empty()) {
@@ -165,13 +170,25 @@ StatusWith<CollModRequest> parseCollModRequest(OperationContext* opCtx,
                 cmr.idx = indexes[0];
             }
 
-            BSONElement oldExpireSecs = cmr.idx->infoObj().getField("expireAfterSeconds");
-            if (oldExpireSecs.eoo()) {
-                return Status(ErrorCodes::InvalidOptions, "no expireAfterSeconds field to update");
+            if (!cmr.indexExpireAfterSeconds.eoo()) {
+                BSONElement oldExpireSecs = cmr.idx->infoObj().getField("expireAfterSeconds");
+                if (oldExpireSecs.eoo()) {
+                    return Status(ErrorCodes::InvalidOptions, "no expireAfterSeconds field to update");
+                }
+                if (!oldExpireSecs.isNumber()) {
+                    return Status(ErrorCodes::InvalidOptions,
+                                  "existing expireAfterSeconds field is not a number");
+                }
             }
-            if (!oldExpireSecs.isNumber()) {
-                return Status(ErrorCodes::InvalidOptions,
-                              "existing expireAfterSeconds field is not a number");
+
+            if (!cmr.indexInvisible.eoo()) {
+                BSONElement oldInvisible = cmr.idx->infoObj().getField("invisible");
+                if (oldInvisible.eoo()) {
+                    return Status(ErrorCodes::InvalidOptions, "no invisible field to update");
+                }
+                if (!oldInvisible.isBoolean()) {
+                    return Status(ErrorCodes::InvalidOptions, "existing invisible field is not a boolean");
+                }
             }
 
         } else if (fieldName == "validator" && !isView) {
@@ -409,6 +426,26 @@ Status _collModInternal(OperationContext* opCtx,
                                  cmr.idx->indexName()};
     }
 
+    // invisible index
+    if (!cmr.indexInvisible.eoo()) {
+        BSONElement& newInvisible = cmr.indexInvisible;
+        BSONElement oldInvisible = cmr.idx->infoObj().getField("invisible");
+
+        if (SimpleBSONElementComparator::kInstance.evaluate(newInvisible != oldInvisible)) {
+            result->appendAs(oldInvisible, "invisible_old");
+
+            // Change the value of "expireAfterSeconds" on disk.
+            coll->getCatalogEntry()->updateInvisible(opCtx, cmr.idx->indexName(), newInvisible.Bool());
+
+            // Notify the index catalog that the definition of this index changed.
+            cmr.idx = coll->getIndexCatalog()->refreshEntry(opCtx, cmr.idx);
+            result->appendAs(newInvisible, "invisible_new");
+            opCtx->recoveryUnit()->onRollback([ opCtx, idx = cmr.idx, coll ]() {
+                coll->getIndexCatalog()->refreshEntry(opCtx, idx);
+            });
+        }
+    }
+    
     // The Validator, ValidationAction and ValidationLevel are already parsed and must be OK.
     if (!cmr.collValidator.eoo())
         invariant(coll->setValidator(opCtx, cmr.collValidator.Obj()));

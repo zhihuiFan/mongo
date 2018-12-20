@@ -81,6 +81,7 @@ public:
     static constexpr StringData kStorageEngineFieldName = "storageEngine"_sd;
     static constexpr StringData kTextVersionFieldName = "textIndexVersion"_sd;
     static constexpr StringData kUniqueFieldName = "unique"_sd;
+    static constexpr StringData kInvisibleFieldName = "invisible"_sd;
     static constexpr StringData kWeightsFieldName = "weights"_sd;
 
     /**
@@ -99,6 +100,7 @@ public:
           _sparse(infoObj[IndexDescriptor::kSparseFieldName].trueValue()),
           _unique(_isIdIndex || infoObj[kUniqueFieldName].trueValue()),
           _partial(!infoObj[kPartialFilterExprFieldName].eoo()),
+          _invisible(infoObj.getBoolField(IndexDescriptor::kInvisibleFieldName)),
           _cachedEntry(NULL) {
         _indexNamespace = makeIndexNamespace(_parentNS, _indexName);
 
@@ -208,6 +210,10 @@ public:
         return _partial;
     }
 
+    bool isInvisible() const {
+        return _invisible;
+    }
+    
     // Is this index multikey?
     bool isMultikey(OperationContext* opCtx) const;
 
@@ -285,6 +291,7 @@ private:
     bool _sparse;
     bool _unique;
     bool _partial;
+    bool _invisible;
     IndexVersion _version;
 
     // only used by IndexCatalogEntryContainer to do caching for perf

@@ -127,6 +127,10 @@ public:
                                   StringData idxName,
                                   long long newExpireSeconds) = 0;
 
+    virtual void updateInvisible(OperationContext* opCtx,
+                                 StringData idxName,
+                                 bool invisible) = 0;
+
     virtual void updateIndexMetadata(OperationContext* opCtx, const IndexDescriptor* desc) {}
 
     /**

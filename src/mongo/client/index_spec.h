@@ -106,7 +106,8 @@ public:
      */
     IndexSpec& unique(bool value = true);
 
-
+    IndexSpec& invisible(bool value = false);
+    
     /** Set the name for this index. If not set, a name will be automatically generated. */
     IndexSpec& name(const StringData& name);
 

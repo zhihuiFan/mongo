@@ -100,6 +100,10 @@ public:
                           StringData idxName,
                           long long newExpireSeconds) final;
 
+    void updateInvisible(OperationContext* opCtx,
+                         StringData idxName,
+                         bool invisible) final;
+
     void updateFlags(OperationContext* opCtx, int newValue) final;
 
     void addUUID(OperationContext* opCtx, CollectionUUID uuid, Collection* coll) final;
