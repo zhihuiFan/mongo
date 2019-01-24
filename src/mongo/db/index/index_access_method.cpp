@@ -137,7 +137,11 @@ Status IndexAccessMethod::insert(OperationContext* opCtx,
     MultikeyPaths multikeyPaths;
     // Delegate to the subclass.
     getKeys(obj, options.getKeysMode, &keys, &multikeyPaths);
-
+    log() << "IndexAccessMethod::insert Got Keys from " << obj;
+    for (auto k: keys) {
+        std::cout <<  k.toString()  << "\n";
+    }
+    
     Status ret = Status::OK();
     for (BSONObjSet::const_iterator i = keys.begin(); i != keys.end(); ++i) {
         Status status = _newInterface->insert(opCtx, *i, loc, options.dupsAllowed);
@@ -579,6 +583,11 @@ void IndexAccessMethod::getKeys(const BSONObj& obj,
                                               13026,
                                               13027};
     try {
+        log() << "At start of IndexAccessMethod::getKeys, keys " ;
+        for (auto k: *keys) {
+            std::cout << " end " <<  k.toString()  << "\n";
+        }
+
         doGetKeys(obj, keys, multikeyPaths);
     } catch (const AssertionException& ex) {
         // Suppress all indexing errors when mode is kRelaxConstraints.

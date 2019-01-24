@@ -87,6 +87,12 @@ void BtreeKeyGenerator::getKeys(const BSONObj& obj,
                                 MultikeyPaths* multikeyPaths) const {
     // '_fieldNames' and '_fixed' are passed by value so that they can be mutated as part of the
     // getKeys call.  :|
+    for (auto f : _fieldNames) {
+        std::cout << "BTreeKeygenerator has fields" << f<< std::endl;
+    }
+    for (auto f: _fixed) {
+        std::cout << "Fixed elem " <<  f.toString() << "\n";
+    }
     getKeysImpl(_fieldNames, _fixed, obj, keys, multikeyPaths);
     if (keys->empty() && !_isSparse) {
         keys->insert(_nullKey);
@@ -418,6 +424,7 @@ void BtreeKeyGeneratorV1::getKeysImplWithArray(
         }
     }
 
+    std::cout << "Find Array Element " << arrElt.toString() << "\n";
     if (arrElt.eoo()) {
         // No array, so generate a single key.
         if (_isSparse && numNotFound == fieldNames.size()) {
@@ -425,10 +432,15 @@ void BtreeKeyGeneratorV1::getKeysImplWithArray(
         }
         BSONObjBuilder b(_sizeTracker);
         for (std::vector<BSONElement>::iterator i = fixed.begin(); i != fixed.end(); ++i) {
+            std::cout << "Fixed "<< i->toString() << "\n";
             CollationIndexKey::collationAwareIndexKeyAppend(*i, _collator, &b);
         }
         keys->insert(b.obj());
+        for (auto k: *keys) {
+            std::cout << " array.eoo key " <<  k.toString()  << "\n";
+        }
     } else if (arrElt.embeddedObject().firstElement().eoo()) {
+        std::cout << "We've encountered an empty array. noting to log for now" << "\n";
         // We've encountered an empty array.
         if (multikeyPaths && mayExpandArrayUnembedded) {
             // Any indexed path which traverses through the empty array must be recorded as an array
@@ -456,6 +468,9 @@ void BtreeKeyGeneratorV1::getKeysImplWithArray(
                             true,
                             _emptyPositionalInfo,
                             multikeyPaths);
+        for (auto k : *keys) {
+            std::cout << " k " << k.toString()  << "\n";
+        }
     } else {
         BSONObj arrObj = arrElt.embeddedObject();
 
@@ -464,9 +479,10 @@ void BtreeKeyGeneratorV1::getKeysImplWithArray(
         // having to look up the indexed element again on each recursive call (i.e. once per
         // array element).
         std::vector<PositionalPathInfo> subPositionalInfo(fixed.size());
+        std::cout << "dump filedNames again" << "\n";
         for (size_t i = 0; i < fieldNames.size(); ++i) {
             const bool fieldIsArray = arrIdxs.find(i) != arrIdxs.end();
-
+            std::cout << fieldNames[i] << " " << fieldIsArray  << "\n";
             if (*fieldNames[i] == '\0') {
                 // We've reached the end of the path.
                 if (multikeyPaths && fieldIsArray && mayExpandArrayUnembedded) {
@@ -539,8 +555,14 @@ void BtreeKeyGeneratorV1::getKeysImplWithArray(
                                 subPositionalInfo,
                                 multikeyPaths);
         }
-    }
+        for (auto k: *keys) {
+            std::cout << " in iterator " <<  k.toString()  << "\n";
+        }
 
+    }
+    for (auto k: *keys) {
+        std::cout << " end " <<  k.toString()  << "\n";
+    }
     // Record multikey path components.
     if (multikeyPaths) {
         for (size_t i = 0; i < arrComponents.size(); ++i) {
