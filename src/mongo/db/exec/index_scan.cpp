@@ -103,6 +103,7 @@ boost::optional<IndexKeyEntry> IndexScan::initIndexScan() {
     // We always seek once to establish the cursor position.
     ++_specificStats.seeks;
 
+    log() << "IndexScan Bound " << _params.bounds;
     if (_params.bounds.isSimpleRange) {
         // Start at one key, end at another.
         _startKey = _params.bounds.startKey;

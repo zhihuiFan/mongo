@@ -220,7 +220,7 @@ const double kInvPow256[] = {1.0,                                             //
 
 const uint8_t kEnd = 0x4;
 
-// These overlay with CType or kEnd bytes and therefor must be less/greater than all of
+// These with overlay CType or kEnd bytes and therefor must be less/greater than all of
 // them (and their inverses). They also can't equal 0 or 255 since that would collide with
 // the encoding of NUL bytes in strings as "\x00\xff".
 const uint8_t kLess = 1;
@@ -340,6 +340,7 @@ void KeyString::resetToKey(const BSONObj& obj, Ordering ord, Discriminator discr
 void KeyString::_appendAllElementsForIndexing(const BSONObj& obj,
                                               Ordering ord,
                                               Discriminator discriminator) {
+    log() << "discriminator at the begining " <<  (int)discriminator;
     int elemCount = 0;
     BSONObjIterator it(obj);
     log() << "Index Obj " << obj;
@@ -357,6 +358,7 @@ void KeyString::_appendAllElementsForIndexing(const BSONObj& obj,
         // have the NUL byte terminator. Entries stored in an index are not allowed to have a
         // discriminator.
         if (char ch = *elem.fieldName()) {
+            log() << "Got Char " << ch;
             // l for less / g for greater.
             invariant(ch == 'l' || ch == 'g');
             discriminator = ch == 'l' ? kExclusiveBefore : kExclusiveAfter;

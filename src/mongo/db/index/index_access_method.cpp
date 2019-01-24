@@ -136,6 +136,7 @@ Status IndexAccessMethod::insert(OperationContext* opCtx,
     BSONObjSet keys = SimpleBSONObjComparator::kInstance.makeBSONObjSet();
     MultikeyPaths multikeyPaths;
     // Delegate to the subclass.
+    log() << "*************** " << obj;
     getKeys(obj, options.getKeysMode, &keys, &multikeyPaths);
     log() << "IndexAccessMethod::insert Got Keys from " << obj;
     for (auto k: keys) {

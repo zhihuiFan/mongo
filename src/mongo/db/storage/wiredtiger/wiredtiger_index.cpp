@@ -834,7 +834,7 @@ public:
     }
 
     void setEndPosition(const BSONObj& key, bool inclusive) override {
-        TRACE_CURSOR << "setEndPosition inclusive: " << inclusive << ' ' << key;
+        log() << "setEndPosition inclusive: " << inclusive << ' ' << key;
         if (key.isEmpty()) {
             // This means scan to end of index.
             _endPosition.reset();

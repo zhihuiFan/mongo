@@ -88,10 +88,10 @@ void BtreeKeyGenerator::getKeys(const BSONObj& obj,
     // '_fieldNames' and '_fixed' are passed by value so that they can be mutated as part of the
     // getKeys call.  :|
     for (auto f : _fieldNames) {
-        std::cout << "BTreeKeygenerator has fields" << f<< std::endl;
+        std::cout << "BTreeKeygenerator has fields " << f<< std::endl;
     }
     for (auto f: _fixed) {
-        std::cout << "Fixed elem " <<  f.toString() << "\n";
+        std::cout << "BTreeKeygenerator Fixed elem " <<  f.toString() << "\n";
     }
     getKeysImpl(_fieldNames, _fixed, obj, keys, multikeyPaths);
     if (keys->empty() && !_isSparse) {
@@ -362,7 +362,9 @@ void BtreeKeyGeneratorV1::getKeysImplWithArray(
     const std::vector<PositionalPathInfo>& positionalInfo,
     MultikeyPaths* multikeyPaths) const {
     BSONElement arrElt;
-
+    for (auto f : fieldNames) {
+        std::cout << "Begining Key " << f << "\n";
+    }
     // A set containing the position of any indexed fields in the key pattern that traverse through
     // the 'arrElt' array value.
     std::set<size_t> arrIdxs;
@@ -437,7 +439,7 @@ void BtreeKeyGeneratorV1::getKeysImplWithArray(
         }
         keys->insert(b.obj());
         for (auto k: *keys) {
-            std::cout << " array.eoo key " <<  k.toString()  << "\n";
+            std::cout << "array NotFound " <<  k.toString()  << "\n";
         }
     } else if (arrElt.embeddedObject().firstElement().eoo()) {
         std::cout << "We've encountered an empty array. noting to log for now" << "\n";
