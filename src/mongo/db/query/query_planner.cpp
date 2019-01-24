@@ -840,6 +840,7 @@ StatusWith<std::vector<std::unique_ptr<QuerySolution>>> QueryPlanner::plan(
                        << redact(statusWithCacheData.getStatus().reason());
             } else {
                 cacheData = std::move(statusWithCacheData.getValue());
+                LOG(5) << cacheData->toString();
             }
 
             // We have already cached the tree in canonical order, so now we can order the nodes for

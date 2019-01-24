@@ -615,6 +615,7 @@ protected:
         for (auto&& soln : solns) {
             ost << soln->toString() << '\n';
         }
+        std::cout << ost.ss.str()  << "\n";
     }
 
     /**
@@ -787,11 +788,14 @@ const PlanCacheKey CachePlanSelectionTest::ck = "mock_cache_key";
 //
 
 TEST_F(CachePlanSelectionTest, EqualityIndexScan) {
+    std::cout << "xxxxxxxxxxxxx" << "\n";
     addIndex(BSON("x" << 1), "x_1");
     runQuery(BSON("x" << 5));
 
     assertPlanCacheRecoversSolution(BSON("x" << 5),
                                     "{fetch: {filter: null, node: {ixscan: {pattern: {x: 1}}}}}");
+    str::stream ss;
+    dumpSolutions(ss);
 }
 
 TEST_F(CachePlanSelectionTest, EqualityIndexScanWithTrailingFields) {

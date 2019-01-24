@@ -342,12 +342,14 @@ void KeyString::_appendAllElementsForIndexing(const BSONObj& obj,
                                               Discriminator discriminator) {
     int elemCount = 0;
     BSONObjIterator it(obj);
+    log() << "Index Obj " << obj;
     while (auto elem = it.next()) {
         const int elemIdx = elemCount++;
         const bool invert = (ord.get(elemIdx) == -1);
 
         _appendBsonValue(elem, invert, NULL);
 
+        log() << "index elem " << elem.fieldName();
         dassert(elem.fieldNameSize() < 3);  // fieldNameSize includes the NUL
 
         // IndexEntryComparison::makeQueryObject() encodes a discriminator in the first byte of

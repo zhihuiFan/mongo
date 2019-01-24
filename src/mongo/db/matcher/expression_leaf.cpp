@@ -32,7 +32,7 @@
 
 #include <cmath>
 #include <pcrecpp.h>
-
+#include <iostream>
 #include "mongo/bson/bsonelement_comparator.h"
 #include "mongo/bson/bsonmisc.h"
 #include "mongo/bson/bsonobj.h"
@@ -114,6 +114,9 @@ ComparisonMatchExpression::ComparisonMatchExpression(MatchType type,
 
 bool ComparisonMatchExpression::matchesSingleElement(const BSONElement& e,
                                                      MatchDetails* details) const {
+    std::cout << "filter " << _rhs.toString() << " type " << _rhs.canonicalType()  <<
+              " elem " << e.toString() << " type " <<  e.canonicalType();
+              
     if (e.canonicalType() != _rhs.canonicalType()) {
         // some special cases
         //  jstNULL and undefined are treated the same
