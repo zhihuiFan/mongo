@@ -730,10 +730,10 @@ bool QueryPlannerAccess::processIndexScans(const CanonicalQuery& query,
                                            std::vector<QuerySolutionNode*>* out) {
     // Initialize the ScanBuildingState.
     ScanBuildingState scanState(root, inArrayOperator, indices);
-
+    log() << "root: " << *root << " path " << root->path();
     while (scanState.curChild < root->numChildren()) {
         MatchExpression* child = root->getChild(scanState.curChild);
-
+        log() << "child " << *child << " path " << child->path();
         // If there is no tag, it's not using an index.  We've sorted our children such that the
         // children with tags are first, so we stop now.
         if (NULL == child->getTag()) {
