@@ -281,6 +281,7 @@ public:
         uassertStatusOK(statusWithCQ.getStatus());
         std::unique_ptr<CanonicalQuery> cq = std::move(statusWithCQ.getValue());
 
+        log() << "CanonicalQuery VAlue " << *cq;
         if (ctx->getView()) {
             // Relinquish locks. The aggregation command will re-acquire them.
             ctx.reset();

@@ -397,7 +397,7 @@ StatusWith<PrepareExecutionResult> prepareExecution(OperationContext* opCtx,
 
     if (internalQueryPlanOrChildrenIndependently.load() &&
         SubplanStage::canUseSubplanning(*canonicalQuery)) {
-        LOG(2) << "Running query as sub-queries: " << redact(canonicalQuery->toStringShort());
+        log() << "Running query as sub-queries: " << redact(canonicalQuery->toStringShort());
 
         root =
             make_unique<SubplanStage>(opCtx, collection, ws, plannerParams, canonicalQuery.get());

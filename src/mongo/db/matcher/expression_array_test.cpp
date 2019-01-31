@@ -46,7 +46,7 @@ TEST(ElemMatchObjectMatchExpression, MatchesElementSingle) {
     BSONObj match = BSON("a" << BSON_ARRAY(BSON("b" << 5.0)));
     BSONObj notMatch = BSON("a" << BSON_ARRAY(BSON("b" << 6)));
     unique_ptr<ComparisonMatchExpression> eq(new EqualityMatchExpression("b", baseOperand["b"]));
-    ElemMatchObjectMatchExpression op("a", eq.release());
+    ElemMatchObjectMatchExprbession op("a", eq.release());
     ASSERT(op.matchesSingleElement(match["a"]));
     ASSERT(!op.matchesSingleElement(notMatch["a"]));
 }

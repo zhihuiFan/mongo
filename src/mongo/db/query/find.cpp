@@ -532,8 +532,8 @@ std::string runQuery(OperationContext* opCtx,
         "Can't canonicalize query");
     invariant(cq.get());
 
-    LOG(5) << "Running query:\n" << redact(cq->toString());
-    LOG(2) << "Running query: " << redact(cq->toStringShort());
+    log() << "Running query:\n" << redact(cq->toString());
+    log() << "Running query: " << redact(cq->toStringShort());
 
     // Parse, canonicalize, plan, transcribe, and get a plan executor.
     AutoGetCollectionForReadCommand ctx(opCtx, nss, AutoGetCollection::ViewMode::kViewsForbidden);

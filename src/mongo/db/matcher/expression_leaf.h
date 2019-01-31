@@ -174,7 +174,9 @@ public:
     static constexpr StringData kName = "$eq"_sd;
 
     EqualityMatchExpression(StringData path, const BSONElement& rhs)
-        : ComparisonMatchExpression(EQ, path, rhs) {}
+        : ComparisonMatchExpression(EQ, path, rhs) {
+        std::cout << "ComparisonMatchExpression " << toString() << "\n";
+    }
 
     StringData name() const final {
         return kName;
@@ -196,7 +198,9 @@ public:
     static constexpr StringData kName = "$lte"_sd;
 
     LTEMatchExpression(StringData path, const BSONElement& rhs)
-        : ComparisonMatchExpression(LTE, path, rhs) {}
+        : ComparisonMatchExpression(LTE, path, rhs) {
+        std::cout << "ComparisonMatchExpression " << toString() << "\n";
+    }
 
     StringData name() const final {
         return kName;
@@ -218,7 +222,9 @@ public:
     static constexpr StringData kName = "$lt"_sd;
 
     LTMatchExpression(StringData path, const BSONElement& rhs)
-        : ComparisonMatchExpression(LT, path, rhs) {}
+        : ComparisonMatchExpression(LT, path, rhs) {
+        std::cout << "ComparisonMatchExpression " << toString() << "\n";
+    }
 
     StringData name() const final {
         return kName;
@@ -240,7 +246,9 @@ public:
     static constexpr StringData kName = "$gt"_sd;
 
     GTMatchExpression(StringData path, const BSONElement& rhs)
-        : ComparisonMatchExpression(GT, path, rhs) {}
+        : ComparisonMatchExpression(GT, path, rhs) {
+        std::cout << "ComparisonMatchExpression " << toString() << "\n";
+    }
 
     StringData name() const final {
         return kName;
@@ -262,7 +270,9 @@ public:
     static constexpr StringData kName = "$gte"_sd;
 
     GTEMatchExpression(StringData path, const BSONElement& rhs)
-        : ComparisonMatchExpression(GTE, path, rhs) {}
+        : ComparisonMatchExpression(GTE, path, rhs) {
+        std::cout << "ComparisonMatchExpression " << toString() << "\n";
+    }
 
     StringData name() const final {
         return kName;

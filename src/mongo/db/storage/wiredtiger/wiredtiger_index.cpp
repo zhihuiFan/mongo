@@ -1334,6 +1334,7 @@ Status WiredTigerIndexUnique::_insertTimestampUnsafe(OperationContext* opCtx,
                                                      const BSONObj& key,
                                                      const RecordId& id,
                                                      bool dupsAllowed) {
+    log() << "_insertTimestampUnsafe"  << key;
     const KeyString data(keyStringVersion(), key, _ordering);
     WiredTigerItem keyItem(data.getBuffer(), data.getSize());
 
@@ -1399,7 +1400,7 @@ Status WiredTigerIndexUnique::_insertTimestampSafe(OperationContext* opCtx,
                                                    const BSONObj& key,
                                                    const RecordId& id,
                                                    bool dupsAllowed) {
-    TRACE_INDEX << "Timestamp safe unique idx key: " << key << " id: " << id;
+    log() << "Timestamp safe unique idx key: " << key << " id: " << id;
 
     int ret;
 
@@ -1639,7 +1640,7 @@ Status WiredTigerIndexStandard::_insert(OperationContext* opCtx,
                                         bool dupsAllowed) {
     invariant(dupsAllowed);
 
-    TRACE_INDEX << " key: " << keyBson << " id: " << id;
+    log() << " key: " << keyBson << " id: " << id;
 
     KeyString key(keyStringVersion(), keyBson, _ordering, id);
     WiredTigerItem keyItem(key.getBuffer(), key.getSize());

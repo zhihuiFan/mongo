@@ -27,7 +27,7 @@
  */
 
 #include "mongo/platform/basic.h"
-
+#include <iostream>
 #include "mongo/db/matcher/expression_leaf.h"
 
 #include <cmath>
@@ -110,12 +110,13 @@ ComparisonMatchExpression::ComparisonMatchExpression(MatchType type,
         default:
             uasserted(ErrorCodes::BadValue, "bad match type for ComparisonMatchExpression");
     }
+
 }
 
 bool ComparisonMatchExpression::matchesSingleElement(const BSONElement& e,
                                                      MatchDetails* details) const {
-    std::cout << "filter " << _rhs.toString() << " type " << _rhs.canonicalType()  <<
-              " elem " << e.toString() << " type " <<  e.canonicalType();
+    std::cout << "filter: " << _rhs.toString() << " Filter type " << _rhs.canonicalType()  <<
+        " elem " << e.toString() << " Element type " <<  e.canonicalType() << "\n";
               
     if (e.canonicalType() != _rhs.canonicalType()) {
         // some special cases

@@ -74,6 +74,7 @@ IndexScan::IndexScan(OperationContext* opCtx,
       _params(params),
       _startKeyInclusive(IndexBounds::isStartIncludedInBound(params.bounds.boundInclusion)),
       _endKeyInclusive(IndexBounds::isEndIncludedInBound(params.bounds.boundInclusion)) {
+    log() << "IndexScan Bound " << _params.bounds << " during init";
     // We can't always access the descriptor in the call to getStats() so we pull
     // any info we need for stats reporting out here.
     _specificStats.keyPattern = _keyPattern;

@@ -53,7 +53,7 @@ public:
 
     virtual ~PathMatchExpression() {}
 
-    bool matches(const MatchableDocument* doc, MatchDetails* details = nullptr) const final {
+    virtual bool matches(const MatchableDocument* doc, MatchDetails* details = nullptr) const final {
         MatchableDocument::IteratorHolder cursor(doc, &_elementPath);
         while (cursor->more()) {
             ElementIterator::Context e = cursor->next();

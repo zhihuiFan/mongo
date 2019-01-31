@@ -29,7 +29,7 @@
  */
 
 #include "mongo/db/matcher/expression_array.h"
-
+#include <iostream>
 #include "mongo/db/field_ref.h"
 #include "mongo/db/jsobj.h"
 
@@ -40,6 +40,7 @@ bool ArrayMatchingMatchExpression::matchesSingleElement(const BSONElement& elt,
     if (elt.type() != BSONType::Array) {
         return false;
     }
+    std::cout <<"ArrayMatchingMatchExpression::matchesSingleElement " <<  elt.toString()  << "\n";
 
     return matchesArray(elt.embeddedObject(), details);
 }
@@ -73,6 +74,7 @@ ElemMatchObjectMatchExpression::ElemMatchObjectMatchExpression(StringData path,
 
 bool ElemMatchObjectMatchExpression::matchesArray(const BSONObj& anArray,
                                                   MatchDetails* details) const {
+    
     BSONObjIterator i(anArray);
     while (i.more()) {
         BSONElement inner = i.next();
@@ -155,6 +157,7 @@ bool ElemMatchValueMatchExpression::matchesArray(const BSONObj& anArray,
 
 bool ElemMatchValueMatchExpression::_arrayElementMatchesAll(const BSONElement& e) const {
     for (unsigned i = 0; i < _subs.size(); i++) {
+        std::cout << "me: " << _subs[i]->toString() << " elem: " << e  << "\n";
         if (!_subs[i]->matchesSingleElement(e))
             return false;
     }

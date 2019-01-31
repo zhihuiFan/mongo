@@ -667,6 +667,7 @@ std::unique_ptr<QuerySolution> QueryPlannerAnalysis::analyzeDataAccess(
         return NULL;
     }
 
+    
     // A solution can be blocking if it has a blocking sort stage or
     // a hashed AND stage.
     bool hasAndHashStage = hasNode(solnRoot.get(), STAGE_AND_HASH);
@@ -724,7 +725,7 @@ std::unique_ptr<QuerySolution> QueryPlannerAnalysis::analyzeDataAccess(
 
     // Project the results.
     if (NULL != query.getProj()) {
-        LOG(5) << "PROJECTION: Current plan is:\n" << redact(solnRoot->toString());
+        log() << "PROJECTION: Current plan is:\n" << redact(solnRoot->toString());
 
         ProjectionNode::ProjectionType projType = ProjectionNode::DEFAULT;
         BSONObj coveredKeyObj;

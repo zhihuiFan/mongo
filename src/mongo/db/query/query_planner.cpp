@@ -524,7 +524,7 @@ StatusWith<std::unique_ptr<QuerySolution>> QueryPlanner::planFromCache(
 // static
 StatusWith<std::vector<std::unique_ptr<QuerySolution>>> QueryPlanner::plan(
     const CanonicalQuery& query, const QueryPlannerParams& params) {
-    LOG(5) << "Beginning planning..." << endl
+    log() << "Beginning planning..." << endl
            << "=============================" << endl
            << "Options = " << optionString(params.options) << endl
            << "Canonical query:" << endl
@@ -533,7 +533,7 @@ StatusWith<std::vector<std::unique_ptr<QuerySolution>>> QueryPlanner::plan(
     std::vector<std::unique_ptr<QuerySolution>> out;
 
     for (size_t i = 0; i < params.indices.size(); ++i) {
-        LOG(5) << "Index " << i << " is " << params.indices[i].toString();
+        log() << "Index " << i << " is " << params.indices[i].toString();
     }
 
     const bool canTableScan = !(params.options & QueryPlannerParams::NO_TABLE_SCAN);
@@ -583,7 +583,7 @@ StatusWith<std::vector<std::unique_ptr<QuerySolution>>> QueryPlanner::plan(
 
     for (stdx::unordered_set<string>::const_iterator it = fields.begin(); it != fields.end();
          ++it) {
-        LOG(5) << "Predicate over field '" << *it << "'";
+        log() << "Predicate over field '" << *it << "'";
     }
 
     // Filter our indices so we only look at indices that are over our predicates.
@@ -738,7 +738,7 @@ StatusWith<std::vector<std::unique_ptr<QuerySolution>>> QueryPlanner::plan(
     }
 
     for (size_t i = 0; i < relevantIndices.size(); ++i) {
-        LOG(2) << "Relevant index " << i << " is " << relevantIndices[i].toString();
+        log() << "Relevant index " << i << " is " << relevantIndices[i].toString();
     }
 
     // Figure out how useful each index is to each predicate.
@@ -760,7 +760,7 @@ StatusWith<std::vector<std::unique_ptr<QuerySolution>>> QueryPlanner::plan(
     }
 
     // query.root() is now annotated with RelevantTag(s).
-    LOG(5) << "Rated tree:" << endl << redact(query.root()->toString());
+    log() << "Rated tree:" << endl << redact(query.root()->toString());
 
     // If there is a GEO_NEAR it must have an index it can use directly.
     const MatchExpression* gnNode = NULL;
@@ -826,7 +826,7 @@ StatusWith<std::vector<std::unique_ptr<QuerySolution>>> QueryPlanner::plan(
 
         unique_ptr<MatchExpression> rawTree;
         while ((rawTree = isp.getNext()) && (out.size() < params.maxIndexedSolutions)) {
-            LOG(5) << "About to build solntree from tagged tree:" << endl
+            log() << "About to build solntree from tagged tree:" << endl
                    << redact(rawTree.get()->toString());
 
             // Store the plan cache index tree before calling prepareForAccessingPlanning(), so that
@@ -857,7 +857,7 @@ StatusWith<std::vector<std::unique_ptr<QuerySolution>>> QueryPlanner::plan(
 
             auto soln = QueryPlannerAnalysis::analyzeDataAccess(query, params, std::move(solnRoot));
             if (soln) {
-                LOG(5) << "Planner: adding solution:" << endl << redact(soln->toString());
+                log() << "Planner: adding solution:" << endl << redact(soln->toString());
                 if (statusWithCacheData.isOK()) {
                     SolutionCacheData* scd = new SolutionCacheData();
                     scd->tree = std::move(cacheData);
@@ -871,7 +871,7 @@ StatusWith<std::vector<std::unique_ptr<QuerySolution>>> QueryPlanner::plan(
     // Don't leave tags on query tree.
     query.root()->resetTag();
 
-    LOG(5) << "Planner: outputted " << out.size() << " indexed solutions.";
+    log() << "Planner: outputted " << out.size() << " indexed solutions.";
 
     // Produce legible error message for failed OR planning with a TEXT child.
     // TODO: support collection scan for non-TEXT children of OR.
@@ -974,7 +974,7 @@ StatusWith<std::vector<std::unique_ptr<QuerySolution>>> QueryPlanner::plan(
                     }
                 }
                 if (providesSort(query, QueryPlannerCommon::reverseSortObj(kp))) {
-                    LOG(5) << "Planner: outputting soln that uses (reverse) index "
+                    log() << "Planner: outputting soln that uses (reverse) index "
                            << "to provide sort.";
                     auto soln = buildWholeIXSoln(params.indices[i], query, params, -1);
                     if (soln) {
