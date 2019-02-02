@@ -259,8 +259,18 @@ env.CppUnitTest(
 )
 
 env.CppUnitTest(
-    target='storage_key_string_test',
+    target='key_string_test',
     source='key_string_test.cpp',
+    LIBDEPS=[
+        'key_string',
+        '$BUILD_DIR/mongo/base',
+        ]
+)
+
+
+env.CppUnitTest(
+    target='key_string_2_test',
+    source='key_string_2_test.cpp',
     LIBDEPS=[
         'key_string',
         '$BUILD_DIR/mongo/base',
