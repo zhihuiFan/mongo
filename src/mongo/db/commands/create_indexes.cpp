@@ -296,6 +296,11 @@ public:
             resolveCollectionDefaultProperties(opCtx, collection, std::move(specs));
         uassertStatusOK(indexSpecsWithDefaults.getStatus());
         specs = std::move(indexSpecsWithDefaults.getValue());
+        for (auto& spec : specs) {
+            if (!spec.hasField("background")) {
+                spec = spec.addField(BSON("background" << true).firstElement());
+            }
+        }
 
         const int numIndexesBefore = collection->getIndexCatalog()->numIndexesTotal(opCtx);
         result.append("numIndexesBefore", numIndexesBefore);
