@@ -692,12 +692,15 @@ bool WiredTigerKVEngine::_hasUri(WT_SESSION* session, const std::string& uri) co
 }
 
 std::vector<std::string> WiredTigerKVEngine::getAllIdents(OperationContext* opCtx) const {
+    log() << "Get all ID here";
     std::vector<std::string> all;
     WiredTigerCursor cursor("metadata:", WiredTigerSession::kMetadataTableId, false, opCtx);
     WT_CURSOR* c = cursor.get();
     if (!c)
         return all;
-
+    c->set_key(c, "table:");
+    c->search_near(c, NULL);
+    log() << "get start to interate";
     while (c->next(c) == 0) {
         const char* raw;
         c->get_key(c, &raw);
@@ -716,6 +719,7 @@ std::vector<std::string> WiredTigerKVEngine::getAllIdents(OperationContext* opCt
         all.push_back(ident.toString());
     }
 
+    log() << "get start to interate done, total " << all.size() ;
     return all;
 }
 
