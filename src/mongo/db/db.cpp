@@ -394,7 +394,9 @@ void repairDatabasesAndCheckVersion(OperationContext* txn) {
         // fine to not open the "local" database and populate the catalog entries because we won't
         // attempt to drop the temporary collections anyway.
         Lock::DBLock dbLock(txn->lockState(), kSystemReplSetCollection.db(), MODE_X);
+        log() << "start to open db " << kSystemReplSetCollection.db();
         dbHolder().openDb(txn, kSystemReplSetCollection.db());
+        log() << "start to open db done" << kSystemReplSetCollection.db();
     }
 
     // On replica set members we only clear temp collections on DBs other than "local" during
@@ -405,112 +407,136 @@ void repairDatabasesAndCheckVersion(OperationContext* txn) {
         !(checkIfReplMissingFromCommandLine(txn) || replSettings.usingReplSets() ||
           replSettings.isSlave());
 
+    log() << "checking server 23299 start...";
     const bool shouldDoCleanupForSERVER23299 = isSubjectToSERVER23299(txn);
+    log() << "checking server 23299 end...";
 
-    for (vector<string>::const_iterator i = dbNames.begin(); i != dbNames.end(); ++i) {
-        const string dbName = *i;
-        LOG(1) << "    Recovering database: " << dbName;
+    // log() << "checking file version starting..";
+    // for (vector<string>::const_iterator i = dbNames.begin(); i != dbNames.end(); ++i) {
+    //     const string dbName = *i;
+    //     LOG(1) << "    Recovering database: " << dbName;
 
-        Database* db = dbHolder().openDb(txn, dbName);
-        invariant(db);
+    //     Database* db = dbHolder().openDb(txn, dbName);
+    //     invariant(db);
 
-        // First thing after opening the database is to check for file compatibility,
-        // otherwise we might crash if this is a deprecated format.
-        auto status = db->getDatabaseCatalogEntry()->currentFilesCompatible(txn);
-        if (!status.isOK()) {
-            if (status.code() == ErrorCodes::CanRepairToDowngrade) {
-                // Convert CanRepairToDowngrade statuses to MustUpgrade statuses to avoid logging a
-                // potentially confusing and inaccurate message.
-                //
-                // TODO SERVER-24097: Log a message informing the user that they can start the
-                // current version of mongod with --repair and then proceed with normal startup.
-                status = {ErrorCodes::MustUpgrade, status.reason()};
+    //     // First thing after opening the database is to check for file compatibility,
+    //     // otherwise we might crash if this is a deprecated format.
+    //     auto status = db->getDatabaseCatalogEntry()->currentFilesCompatible(txn);
+    //     if (!status.isOK()) {
+    //         if (status.code() == ErrorCodes::CanRepairToDowngrade) {
+    //             // Convert CanRepairToDowngrade statuses to MustUpgrade statuses to avoid logging a
+    //             // potentially confusing and inaccurate message.
+    //             //
+    //             // TODO SERVER-24097: Log a message informing the user that they can start the
+    //             // current version of mongod with --repair and then proceed with normal startup.
+    //             status = {ErrorCodes::MustUpgrade, status.reason()};
+    //         }
+    //         severe() << "Unable to start mongod due to an incompatibility with the data files and"
+    //                     " this version of mongod: "
+    //                  << redact(status);
+    //         severe() << "Please consult our documentation when trying to downgrade to a previous"
+    //                     " major release";
+    //         quickExit(EXIT_NEED_UPGRADE);
+    //         return;
+    //     }
+    // }
+    log() << "checking feature compability version .." ;
+    Database* db = dbHolder().openDb(txn, "admin"); /* mark(yizhi): this time it is very quick */
+
+    // Check if admin.system.version contains an invalid featureCompatibilityVersion.
+    // If a valid featureCompatibilityVersion is present, cache it as a server parameter.
+    if (Collection* versionColl =
+        db->getCollection(FeatureCompatibilityVersion::kCollection)) {
+        BSONObj featureCompatibilityVersion;
+        if (Helpers::findOne(txn,
+                             versionColl,
+                             BSON("_id" << FeatureCompatibilityVersion::kParameterName),
+                             featureCompatibilityVersion)) {
+            auto version = FeatureCompatibilityVersion::parse(featureCompatibilityVersion);
+            if (!version.isOK()) {
+                severe() << version.getStatus();
+                fassertFailedNoTrace(40283);
             }
-            severe() << "Unable to start mongod due to an incompatibility with the data files and"
-                        " this version of mongod: "
-                     << redact(status);
-            severe() << "Please consult our documentation when trying to downgrade to a previous"
-                        " major release";
-            quickExit(EXIT_NEED_UPGRADE);
-            return;
-        }
-
-        // Check if admin.system.version contains an invalid featureCompatibilityVersion.
-        // If a valid featureCompatibilityVersion is present, cache it as a server parameter.
-        if (dbName == "admin") {
-            if (Collection* versionColl =
-                    db->getCollection(FeatureCompatibilityVersion::kCollection)) {
-                BSONObj featureCompatibilityVersion;
-                if (Helpers::findOne(txn,
-                                     versionColl,
-                                     BSON("_id" << FeatureCompatibilityVersion::kParameterName),
-                                     featureCompatibilityVersion)) {
-                    auto version = FeatureCompatibilityVersion::parse(featureCompatibilityVersion);
-                    if (!version.isOK()) {
-                        severe() << version.getStatus();
-                        fassertFailedNoTrace(40283);
-                    }
-                    serverGlobalParams.featureCompatibility.version.store(version.getValue());
-                }
-            }
-        }
-
-        // Major versions match, check indexes
-        const string systemIndexes = db->name() + ".system.indexes";
-
-        Collection* coll = db->getCollection(systemIndexes);
-        unique_ptr<PlanExecutor> exec(
-            InternalPlanner::collectionScan(txn, systemIndexes, coll, PlanExecutor::YIELD_MANUAL));
-
-        BSONObj index;
-        PlanExecutor::ExecState state;
-        while (PlanExecutor::ADVANCED == (state = exec->getNext(&index, NULL))) {
-            const BSONObj key = index.getObjectField("key");
-            const string plugin = IndexNames::findPluginName(key);
-
-            if (db->getDatabaseCatalogEntry()->isOlderThan24(txn)) {
-                if (IndexNames::existedBefore24(plugin)) {
-                    continue;
-                }
-
-                log() << "Index " << index << " claims to be of type '" << plugin << "', "
-                      << "which is either invalid or did not exist before v2.4. "
-                      << "See the upgrade section: "
-                      << "http://dochub.mongodb.org/core/upgrade-2.4" << startupWarningsLog;
-            }
-
-            if (index["v"].isNumber() && index["v"].numberInt() == 0) {
-                log() << "WARNING: The index: " << index << " was created with the deprecated"
-                      << " v:0 format.  This format will not be supported in a future release."
-                      << startupWarningsLog;
-                log() << "\t To fix this, you need to rebuild this index."
-                      << " For instructions, see http://dochub.mongodb.org/core/rebuild-v0-indexes"
-                      << startupWarningsLog;
-            }
-        }
-
-        // Non-yielding collection scans from InternalPlanner will never error.
-        invariant(PlanExecutor::IS_EOF == state);
-
-        if (replSettings.usingReplSets()) {
-            // We only care about the _id index if we are in a replset
-            checkForIdIndexes(txn, db);
-            // Ensure oplog is capped (mmap does not guarantee order of inserts on noncapped
-            // collections)
-            if (db->name() == "local") {
-                checkForCappedOplog(txn, db);
-            }
-        }
-
-        if (shouldDoCleanupForSERVER23299) {
-            handleSERVER23299ForDb(txn, db);
-        }
-
-        if (!storageGlobalParams.readOnly &&
-            (shouldClearNonLocalTmpCollections || dbName == "local")) {
-            db->clearTmpCollections(txn);
+            serverGlobalParams.featureCompatibility.version.store(version.getValue());
         }
     }
+
+    // log() << "checking index.." ;
+    // for (vector<string>::const_iterator i = dbNames.begin(); i != dbNames.end(); ++i) {
+    //     const string dbName = *i; // /* mark(yizhi): memory copy here */
+    //     log() << "open db " << dbName ;
+    //     Database* db = dbHolder().openDb(txn, dbName);
+    //     log() << "open db " << dbName << " done ";
+    //     invariant(db);
+
+    //     // Major versions match, check indexes
+    //     const string systemIndexes = db->name() + ".system.indexes";
+
+    //     Collection* coll = db->getCollection(systemIndexes);
+    //     unique_ptr<PlanExecutor> exec(
+    //         InternalPlanner::collectionScan(txn, systemIndexes, coll, PlanExecutor::YIELD_MANUAL));
+
+    //     BSONObj index;
+    //     PlanExecutor::ExecState state;
+    //     while (PlanExecutor::ADVANCED == (state = exec->getNext(&index, NULL))) {
+    //         const BSONObj key = index.getObjectField("key");
+    //         const string plugin = IndexNames::findPluginName(key);
+
+    //         if (db->getDatabaseCatalogEntry()->isOlderThan24(txn)) {
+    //             if (IndexNames::existedBefore24(plugin)) {
+    //                 continue;
+    //             }
+
+    //             log() << "Index " << index << " claims to be of type '" << plugin << "', "
+    //                   << "which is either invalid or did not exist before v2.4. "
+    //                   << "See the upgrade section: "
+    //                   << "http://dochub.mongodb.org/core/upgrade-2.4" << startupWarningsLog;
+    //         }
+
+    //         if (index["v"].isNumber() && index["v"].numberInt() == 0) {
+    //             log() << "WARNING: The index: " << index << " was created with the deprecated"
+    //                   << " v:0 format.  This format will not be supported in a future release."
+    //                   << startupWarningsLog;
+    //             log() << "\t To fix this, you need to rebuild this index."
+    //                   << " For instructions, see http://dochub.mongodb.org/core/rebuild-v0-indexes"
+    //                   << startupWarningsLog;
+    //         }
+    //     }
+
+    //     // Non-yielding collection scans from InternalPlanner will never error.
+    //     invariant(PlanExecutor::IS_EOF == state);
+    // }
+
+    log() << "checking oplog() ";
+    if (replSettings.usingReplSets()) {
+            // We only care about the _id index if we are in a replset
+        Database* db = dbHolder().openDb(txn, "local");
+        checkForIdIndexes(txn, db);
+        // Ensure oplog is capped (mmap does not guarantee order of inserts on noncapped
+        // collections)
+        if (db->name() == "local") {
+            checkForCappedOplog(txn, db);
+        }
+    }
+    log() << "oplog check done";
+        
+    // for (vector<string>::const_iterator i = dbNames.begin(); i != dbNames.end(); ++i) {
+    //     const string dbName = *i;
+
+    //     Database* db = dbHolder().openDb(txn, dbName);
+    //     invariant(db);
+
+    //     if (shouldDoCleanupForSERVER23299) {
+    //         handleSERVER23299ForDb(txn, db);
+    //     }
+        
+    //     if (!storageGlobalParams.readOnly &&
+    //         (shouldClearNonLocalTmpCollections || dbName == "local")) {
+    //         db->clearTmpCollections(txn);
+    //     }
+    // }
+    log() << "oplog check done";
+    log() << "all done";
 
     LOG(1) << "done repairDatabases";
 }

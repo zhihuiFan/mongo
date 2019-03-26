@@ -123,7 +123,7 @@ Database* DatabaseHolder::openDb(OperationContext* txn, StringData ns, bool* jus
     // existant database by the get method, yet still counts in getNamesWithConflictingCasing.
     if (auto db = _dbs[dbname])
         return db;
-
+    log() << "open db slowly " << dbname;
     // We've inserted a nullptr entry for dbname: make sure to remove it on unsuccessful exit.
     auto removeDbGuard = MakeGuard([this, &lk, dbname] {
         if (!lk.owns_lock())

@@ -706,16 +706,9 @@ std::vector<std::string> WiredTigerKVEngine::getAllIdents(OperationContext* opCt
         c->get_key(c, &raw);
         StringData key(raw);
         size_t idx = key.find(':');
-        if (idx == string::npos)
-            continue;
-        StringData type = key.substr(0, idx);
-        if (type != "table")
-            continue;
-
         StringData ident = key.substr(idx + 1);
         if (ident == "sizeStorer")
             continue;
-
         all.push_back(ident.toString());
     }
 

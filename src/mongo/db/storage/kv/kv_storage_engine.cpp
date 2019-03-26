@@ -75,8 +75,10 @@ KVStorageEngine::KVStorageEngine(KVEngine* engine, const KVStorageEngineOptions&
 
     OperationContextNoop opCtx(_engine->newRecoveryUnit());
 
+    log() << "hasIdent start here";
     bool catalogExists = engine->hasIdent(&opCtx, catalogInfo);
-
+    log() << "hasIdent end here";
+    
     if (options.forRepair && catalogExists) {
         log() << "Repairing catalog metadata";
         // TODO should also validate all BSON in the catalog.
@@ -97,6 +99,7 @@ KVStorageEngine::KVStorageEngine(KVEngine* engine, const KVStorageEngineOptions&
         uow.commit();
     }
 
+    log() << "Get catalog record store start here";
     _catalogRecordStore =
         _engine->getRecordStore(&opCtx, catalogInfo, catalogInfo, CollectionOptions());
     _catalog.reset(new KVCatalog(_catalogRecordStore.get(),
@@ -104,15 +107,14 @@ KVStorageEngine::KVStorageEngine(KVEngine* engine, const KVStorageEngineOptions&
                                  _options.directoryPerDB,
                                  _options.directoryForIndexes));
     _catalog->init(&opCtx);
+    log() << "Get catalog record store init done here";
 
     std::vector<std::string> collections;
     _catalog->getAllCollections(&collections);
-
-    for (size_t i = 0; i < collections.size(); i++) {
-        std::string coll = collections[i];
+    log() << "start init collection, total " << collections.size();
+    for (const auto & coll : collections) {
         NamespaceString nss(coll);
         string dbName = nss.db().toString();
-
         // No rollback since this is only for committed dbs.
         KVDatabaseCatalogEntry*& db = _dbs[dbName];
         if (!db) {
@@ -121,7 +123,7 @@ KVStorageEngine::KVStorageEngine(KVEngine* engine, const KVStorageEngineOptions&
 
         db->initCollection(&opCtx, coll, options.forRepair);
     }
-
+    log() << "init collection done";
     opCtx.recoveryUnit()->abandonSnapshot();
 
     // now clean up orphaned idents
@@ -129,6 +131,7 @@ KVStorageEngine::KVStorageEngine(KVEngine* engine, const KVStorageEngineOptions&
     if (storageGlobalParams.readOnly) {
         return;
     }
+    log() << "prepare for drop";
     {
         // get all idents
         std::set<std::string> allIdents;
@@ -157,6 +160,7 @@ KVStorageEngine::KVStorageEngine(KVEngine* engine, const KVStorageEngineOptions&
             wuow.commit();
         }
     }
+    log() << "prepare for drop done";
 }
 
 void KVStorageEngine::cleanShutdown() {

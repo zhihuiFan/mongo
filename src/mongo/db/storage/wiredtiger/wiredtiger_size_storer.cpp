@@ -134,6 +134,7 @@ void WiredTigerSizeStorer::loadFromCache(StringData uri,
 }
 
 void WiredTigerSizeStorer::fillCache() {
+    log() << "fill cache start" ;
     stdx::lock_guard<stdx::mutex> cursorLock(_cursorMutex);
     _checkMagic();
 
@@ -168,6 +169,7 @@ void WiredTigerSizeStorer::fillCache() {
 
     stdx::lock_guard<stdx::mutex> lk(_entriesMutex);
     _entries.swap(m);
+    log() << "fill cache end";
 }
 
 void WiredTigerSizeStorer::syncCache(bool syncToDisk) {
